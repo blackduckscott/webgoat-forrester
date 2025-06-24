@@ -1,51 +1,40 @@
-name: "Main / Pull requests build"
+# example workflow for Polaris scans using the Black Duck Security Scan Action
+# https://github.com/marketplace/actions/black-duck-security-scan
+name: Polaris
 on:
-    pull_request:
-        paths-ignore:
-            - '.txt'
-            - 'LICENSE'
-            - 'docs/**'
-        branches: [ main ]
-    push:
-        branches:
-            - main
-
+  push:
+    branches: [ main, master, develop, stage, release ]
+  pull_request:
+    branches: [ main, master, develop, stage, release ]
+  workflow_dispatch:
 jobs:
-    pre-commit:
-        name: Pre-commit check
-        runs-on: ubuntu-latest
-        steps:
-            -   name: Checkout git repository
-                uses: actions/checkout@v4.1.6
-            -   name: Setup python
-                uses: actions/setup-python@v5
-                with:
-                    python-version: "3.9"
-            -   uses: actions/setup-java@v4
-                with:
-                    distribution: 'temurin'
-                    java-version: '23'
-            -   name: Pre-commit checks
-                uses: pre-commit/action@v3.0.1
-            -   name: pre-commit-c-lite
-                uses: pre-commit-ci/lite-action@v1.1.0
-                if: always()
-    build:
-        runs-on: ${{ matrix.os }}
-        needs: [ pre-commit ]
-        strategy:
-            fail-fast: true
-            matrix:
-                os: [ ubuntu-latest ]
-            max-parallel: 1
-        steps:
-            -   uses: actions/checkout@v4.1.6
-            -   name: Set up JDK 23
-                uses: actions/setup-java@v4.2.1
-                with:
-                    distribution: 'temurin'
-                    java-version: 23
-                    architecture: x64
-                    cache: 'maven'
-            -   name: Build with Maven
-                run: mvn --no-transfer-progress verify
+  polaris:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Source
+      uses: actions/checkout@v4
+    - name: Setup Java JDK
+      uses: actions/setup-java@v4
+      with:
+        java-version: 23
+        distribution: temurin
+        cache: maven
+    - name: Polaris Scan
+      uses: blackduck-inc/black-duck-security-scan@v2.1.1
+      with:
+        polaris_server_url: ${{ vars.POLARIS_SERVER_URL }}
+        polaris_access_token: ${{ secrets.POLARIS_ACCESS_TOKEN }}
+        polaris_assessment_types: 'SAST'
+        polaris_application_name: MST-WebGoat
+        polaris_prComment_enabled: 'true'
+        polaris_reports_sarif_create: 'true'
+        polaris_upload_sarif_report: 'true'
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        # include_diagnostics: true
+#    - name: Save Logs
+#      if: always()
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: bridge-logs
+#        path: ${{ github.workspace }}/.bridge
+#        include-hidden-files: true
