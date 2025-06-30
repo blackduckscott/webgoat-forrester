@@ -31,13 +31,14 @@ jobs:
         polaris_upload_sarif_report: 'true'
         github_token: ${{ secrets.GITHUB_TOKEN }}
         mark_build_status: 'failure'
+        polaris_waitForScan: 'true'
 
 
-    # - name: cmdLine
-    #   id: cmdLine
-    #   run: |
-    #   EXIT_CODE=${{ steps.black-duck-security-scan.outputs.status }}
-    #   echo "Black Duck Security Scan exit status - $EXIT_CODE"
+    - name: cmdLine
+      id: cmdLine
+      run: |
+      EXIT_CODE=${{ steps.black-duck-security-scan.outputs.status }}
+      echo "Black Duck Security Scan exit status - $EXIT_CODE"
 
         # include_diagnostics: true
 #    - name: Save Logs
